@@ -4,7 +4,7 @@ struct ContentView: View {
     var body: some View {
         TabView {
             Tab("Fréttir", systemImage: "newspaper.fill") {
-                NewsTabPlaceholderView()
+                NewsTabView()
             }
             Tab("Markaðir", systemImage: "chart.bar.fill") {
                 MarketOverviewView()
@@ -23,19 +23,6 @@ struct ContentView: View {
 }
 
 // MARK: - Placeholder tabs (to be implemented in future phases)
-
-private struct NewsTabPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            ContentUnavailableView(
-                "Fréttir",
-                systemImage: "newspaper",
-                description: Text("RSS-straumi frá mbl.is, vb.is og visir.is kemur fljótlega.")
-            )
-            .navigationTitle("Fréttir")
-        }
-    }
-}
 
 private struct SearchTabPlaceholderView: View {
     var body: some View {
