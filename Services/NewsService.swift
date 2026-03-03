@@ -41,22 +41,35 @@ final class NewsService {
     func fetchAll() async -> [NewsItem] {
         await withTaskGroup(of: [NewsItem].self) { group in
             for feed in rssSources {
-                group.addTask { [weak self] in
-                    (try? await self?.fetch(feed: feed)) ?? []
+                let service = self
+                group.addTask {
+                    do {
+                        return try await service.fetch(feed: feed)
+                    } catch {
+                        print("⚠️ RSS fetch failed for \(feed.source.rawValue): \(error)")
+                        return []
+                    }
                 }
             }
             var all: [NewsItem] = []
             for await items in group {
                 all.append(contentsOf: items)
             }
+            print("📰 Fetched \(all.count) news items total")
             return all.sorted { $0.publishedAt > $1.publishedAt }
         }
     }
 
     /// Fetch a single RSS source.
     func fetch(feed: RSSSource) async throws -> [NewsItem] {
-        let (data, _) = try await session.data(from: feed.url)
-        return RSSParser.parse(data: data, source: feed.source, category: feed.category)
+        print("🔄 Fetching \(feed.url)")
+        let (data, response) = try await session.data(from: feed.url)
+        if let http = response as? HTTPURLResponse {
+            print("📡 \(feed.source.rawValue): HTTP \(http.statusCode), \(data.count) bytes")
+        }
+        let items = RSSParser.parse(data: data, source: feed.source, category: feed.category)
+        print("✅ Parsed \(items.count) items from \(feed.source.rawValue)")
+        return items
     }
 }
 
@@ -195,22 +208,19 @@ private final class RSSParser: NSObject, XMLParserDelegate {
 private extension String {
     /// Strip HTML tags using regex — safe to call from any thread.
     func strippingHTML() -> String {
-        // Remove tags
         var result = replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
-        // Decode common HTML entities
         result = result
             .replacingOccurrences(of: "&amp;",  with: "&")
             .replacingOccurrences(of: "&lt;",   with: "<")
             .replacingOccurrences(of: "&gt;",   with: ">")
             .replacingOccurrences(of: "&quot;", with: "\"")
-            .replacingOccurrences(of: "&#39;",  with: "'")
             .replacingOccurrences(of: "&nbsp;", with: " ")
-        // Collapse whitespace
         result = result.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-
     func truncated(to length: Int) -> String {
         count <= length ? self : String(prefix(length)) + "…"
     }
-}
+
+    }
+
