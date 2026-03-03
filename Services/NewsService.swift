@@ -22,7 +22,20 @@ private let rssSources: [RSSSource] = [
     ),
     RSSSource(
         source: .visir,
-        url: URL(string: "https://www.visir.is/rss/section/vidskipti")!,
+        url: URL(string: "https://www.visir.is/rss/")!,
+        category: .almennt
+    ),
+]
+
+private let mostReadSources: [RSSSource] = [
+    RSSSource(
+        source: .mbl,
+        url: URL(string: "https://www.mbl.is/feeds/mest/")!,
+        category: .almennt
+    ),
+    RSSSource(
+        source: .vb,
+        url: URL(string: "https://www.vb.is/rss/")!,
         category: .viðskipti
     ),
 ]
@@ -56,6 +69,28 @@ final class NewsService {
                 all.append(contentsOf: items)
             }
             print("📰 Fetched \(all.count) news items total")
+            return all.sorted { $0.publishedAt > $1.publishedAt }
+        }
+    }
+
+    /// Fetch most-read sources concurrently, merge and sort by date.
+    func fetchMostRead() async -> [NewsItem] {
+        await withTaskGroup(of: [NewsItem].self) { group in
+            for feed in mostReadSources {
+                let service = self
+                group.addTask {
+                    do {
+                        return try await service.fetch(feed: feed)
+                    } catch {
+                        print("⚠️ Mest lesið fetch failed for \(feed.source.rawValue): \(error)")
+                        return []
+                    }
+                }
+            }
+            var all: [NewsItem] = []
+            for await items in group {
+                all.append(contentsOf: items)
+            }
             return all.sorted { $0.publishedAt > $1.publishedAt }
         }
     }

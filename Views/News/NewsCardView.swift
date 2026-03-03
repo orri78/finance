@@ -4,84 +4,82 @@ struct NewsCardView: View {
     let item: NewsItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Thumbnail
+        HStack(alignment: .top, spacing: 12) {
+            thumbnail
+            textContent
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Thumbnail
+
+    private var thumbnail: some View {
+        Group {
             if let imageURL = item.imageURL {
                 AsyncImage(url: imageURL) { phase in
                     switch phase {
                     case .success(let image):
                         image
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 180)
-                            .clipped()
+                            .scaledToFill()
                     case .failure, .empty:
-                        fallbackThumbnail
+                        fallbackThumb
                     @unknown default:
-                        fallbackThumbnail
+                        fallbackThumb
                     }
                 }
             } else {
-                fallbackThumbnail
+                fallbackThumb
             }
-
-            // Text content
-            VStack(alignment: .leading, spacing: 6) {
-                // Source + time row
-                HStack(spacing: 6) {
-                    sourceBadge
-                    Text(item.publishedAt.relativeFormatted)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(item.category.displayName)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-
-                // Title
-                Text(item.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(3)
-
-                // Summary
-                if !item.summary.isEmpty {
-                    Text(item.summary)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                }
-            }
-            .padding(12)
         }
-        .background(Color.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .frame(width: 88, height: 88)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Subviews
-
-    private var fallbackThumbnail: some View {
-        Rectangle()
-            .fill(Color.surfaceSecondary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 120)
+    private var fallbackThumb: some View {
+        Color(UIColor.tertiarySystemBackground)
             .overlay {
                 Image(systemName: "newspaper")
-                    .font(.largeTitle)
+                    .font(.title2)
                     .foregroundStyle(.tertiary)
             }
     }
 
+    // MARK: - Text content
+
+    private var textContent: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            // Source badge + time + category
+            HStack(spacing: 4) {
+                sourceBadge
+                Text("· \(item.publishedAt.relativeFormatted) · \(item.category.displayName)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            // Headline
+            Text(item.title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Source badge
+
     private var sourceBadge: some View {
-        Text(item.source.displayName)
-            .font(.caption2.bold())
+        Text(item.source.displayName.uppercased())
+            .font(.system(size: 9, weight: .bold))
             .foregroundStyle(.white)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
             .background(sourceColor)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .clipShape(RoundedRectangle(cornerRadius: 3))
     }
 
     private var sourceColor: Color {
@@ -95,13 +93,13 @@ struct NewsCardView: View {
 
 // MARK: - Date formatting
 
-private extension Date {
+extension Date {
     var relativeFormatted: String {
         let seconds = -timeIntervalSinceNow
         switch seconds {
-        case ..<60:        return "Rétt í þessu"
-        case ..<3600:      return "\(Int(seconds / 60)) mín"
-        case ..<86400:     return "\(Int(seconds / 3600)) klst"
+        case ..<60:    return "Rétt í þessu"
+        case ..<3600:  return "\(Int(seconds / 60)) mín"
+        case ..<86400: return "\(Int(seconds / 3600)) klst"
         default:
             let f = DateFormatter()
             f.locale = Locale(identifier: "is_IS")

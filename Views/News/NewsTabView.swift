@@ -5,21 +5,31 @@ struct NewsTabView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    loadingView
-                } else if viewModel.filteredItems.isEmpty && viewModel.hasLoaded {
-                    emptyView
-                } else {
-                    newsList
+            VStack(spacing: 0) {
+                sortToggle
+
+                Divider()
+
+                Group {
+                    if viewModel.isLoading {
+                        loadingView
+                    } else if viewModel.filteredItems.isEmpty && viewModel.hasLoaded {
+                        emptyView
+                    } else {
+                        newsList
+                    }
                 }
             }
             .navigationTitle("Fréttir")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     sourceFilterMenu
                 }
+            }
+            .sheet(item: $viewModel.selectedItem) { item in
+                NewsReaderView(item: item)
+                    .ignoresSafeArea()
             }
         }
         .task {
@@ -27,25 +37,56 @@ struct NewsTabView: View {
         }
     }
 
+    // MARK: - Sort Toggle
+
+    private var sortToggle: some View {
+        HStack(spacing: 0) {
+            ForEach(NewsSortMode.allCases, id: \.self) { mode in
+                Button {
+                    Task { await viewModel.switchMode(mode) }
+                } label: {
+                    VStack(spacing: 6) {
+                        Text(mode.rawValue.uppercased())
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(viewModel.sortMode == mode ? .primary : .secondary)
+                            .padding(.top, 10)
+
+                        Rectangle()
+                            .frame(height: 2)
+                            .foregroundStyle(viewModel.sortMode == mode ? Color.brandAccent : Color.clear)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .background(Color(UIColor.systemBackground))
+    }
+
     // MARK: - News list
 
     private var newsList: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                // Error banner (non-blocking)
+            LazyVStack(spacing: 0) {
                 if let error = viewModel.errorMessage {
                     errorBanner(error)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
                 }
 
                 ForEach(viewModel.filteredItems) { item in
-                    Link(destination: item.url) {
+                    Button {
+                        viewModel.selectedItem = item
+                    } label: {
                         NewsCardView(item: item)
                     }
                     .buttonStyle(.plain)
+
+                    Divider()
+                        .padding(.leading, 116)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 4)
         }
         .refreshable {
             await viewModel.refresh()
@@ -97,9 +138,6 @@ struct NewsTabView: View {
             systemImage: "newspaper",
             description: Text("Drægðu niður til að uppfæra, eða athugaðu nettengingu.")
         )
-        .refreshable {
-            await viewModel.refresh()
-        }
     }
 
     private func errorBanner(_ message: String) -> some View {

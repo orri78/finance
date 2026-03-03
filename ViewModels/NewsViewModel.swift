@@ -1,20 +1,31 @@
 import Foundation
 import Observation
 
+enum NewsSortMode: String, CaseIterable {
+    case newest  = "Nýjast"
+    case mostRead = "Mest lesið"
+}
+
 @MainActor
 @Observable
 final class NewsViewModel {
 
     var items: [NewsItem] = []
-    var selectedSource: NewsItem.NewsSource? = nil  // nil = all sources
+    var mostReadItems: [NewsItem] = []
+    var selectedSource: NewsItem.NewsSource? = nil
+    var sortMode: NewsSortMode = .newest
+    var selectedItem: NewsItem? = nil
+
     var isLoading = false
     var isRefreshing = false
     var hasLoaded = false
+    var hasMostReadLoaded = false
     var errorMessage: String? = nil
 
     var filteredItems: [NewsItem] {
-        guard let source = selectedSource else { return items }
-        return items.filter { $0.source == source }
+        let base = sortMode == .newest ? items : mostReadItems
+        guard let source = selectedSource else { return base }
+        return base.filter { $0.source == source }
     }
 
     private let service = NewsService()
@@ -31,8 +42,21 @@ final class NewsViewModel {
     func refresh() async {
         isRefreshing = true
         errorMessage = nil
-        await fetchNews()
+        if sortMode == .newest {
+            await fetchNews()
+        } else {
+            await fetchMostRead()
+        }
         isRefreshing = false
+    }
+
+    func switchMode(_ mode: NewsSortMode) async {
+        sortMode = mode
+        if mode == .mostRead && !hasMostReadLoaded {
+            isLoading = true
+            await fetchMostRead()
+            isLoading = false
+        }
     }
 
     private func fetchNews() async {
@@ -42,5 +66,11 @@ final class NewsViewModel {
         } else {
             items = fetched
         }
+    }
+
+    private func fetchMostRead() async {
+        let fetched = await service.fetchMostRead()
+        mostReadItems = fetched
+        hasMostReadLoaded = true
     }
 }
