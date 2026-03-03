@@ -3,21 +3,16 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            Tab("Fréttir", systemImage: "newspaper.fill") {
-                NewsTabView()
-            }
-            Tab("Markaðir", systemImage: "chart.bar.fill") {
-                MarketOverviewView()
-            }
-            Tab("Leita", systemImage: "magnifyingglass") {
-                SearchTabPlaceholderView()
-            }
-            Tab("Vaktlisti", systemImage: "star.fill") {
-                WatchlistTabPlaceholderView()
-            }
-            Tab("Mín síða", systemImage: "person.fill") {
-                ProfileTabPlaceholderView()
-            }
+            NewsTabView()
+                .tabItem { Label("Fréttir", systemImage: "newspaper.fill") }
+            MarketOverviewView()
+                .tabItem { Label("Markaðir", systemImage: "chart.bar.fill") }
+            SearchTabPlaceholderView()
+                .tabItem { Label("Leita", systemImage: "magnifyingglass") }
+            WatchlistTabPlaceholderView()
+                .tabItem { Label("Vaktlisti", systemImage: "star.fill") }
+            ProfileTabPlaceholderView()
+                .tabItem { Label("Mín síða", systemImage: "person.fill") }
         }
     }
 }
