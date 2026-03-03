@@ -193,18 +193,21 @@ private final class RSSParser: NSObject, XMLParserDelegate {
 // MARK: - String helpers
 
 private extension String {
-    /// Strip basic HTML tags.
+    /// Strip HTML tags using regex — safe to call from any thread.
     func strippingHTML() -> String {
-        guard let data = data(using: .utf8) else { return self }
-        let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
-            .documentType: NSAttributedString.DocumentType.html,
-            .characterEncoding: String.Encoding.utf8.rawValue
-        ]
-        if let attributed = try? NSAttributedString(data: data, options: options, documentAttributes: nil) {
-            return attributed.string
-        }
-        // Fallback: regex strip
-        return replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        // Remove tags
+        var result = replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+        // Decode common HTML entities
+        result = result
+            .replacingOccurrences(of: "&amp;",  with: "&")
+            .replacingOccurrences(of: "&lt;",   with: "<")
+            .replacingOccurrences(of: "&gt;",   with: ">")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&#39;",  with: "'")
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+        // Collapse whitespace
+        result = result.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func truncated(to length: Int) -> String {
