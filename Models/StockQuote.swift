@@ -14,6 +14,16 @@ struct StockQuote: Identifiable, Codable {
     let currency: String    // "ISK"
     let sparklineData: [Double]
 
+    // Extended company info
+    let logoURL: String?
+    let sector: String
+    let description: String
+    let website: String?
+    let founded: Int?
+    let employees: Int?
+    let peRatio: Double?
+    let dividendYield: Double?
+
     var priceChange: Double {
         currentPrice - previousClose
     }

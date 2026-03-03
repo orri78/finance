@@ -60,7 +60,7 @@ struct MarketOverviewView: View {
             Section {
                 ForEach(viewModel.filteredQuotes) { quote in
                     NavigationLink {
-                        StockDetailPlaceholderView(ticker: quote.ticker)
+                        StockDetailView(quote: quote)
                     } label: {
                         StockRowView(quote: quote)
                     }
@@ -132,20 +132,6 @@ private struct IndexHeaderView: View {
     }
 }
 
-// MARK: - Placeholder detail (until StockDetailView is built)
-
-private struct StockDetailPlaceholderView: View {
-    let ticker: String
-
-    var body: some View {
-        ContentUnavailableView(
-            ticker,
-            systemImage: "chart.xyaxis.line",
-            description: Text("Nánar um \(ticker) kemur fljótlega.")
-        )
-        .navigationTitle(ticker)
-    }
-}
 
 #Preview {
     MarketOverviewView()

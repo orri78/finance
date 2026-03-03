@@ -5,7 +5,7 @@ struct StockRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            tickerBadge
+            logoBadge
             centerInfo
             Spacer()
             sparklineAndPrice
@@ -16,13 +16,38 @@ struct StockRowView: View {
 
     // MARK: - Subviews
 
-    private var tickerBadge: some View {
+    private var logoBadge: some View {
+        Group {
+            if let urlStr = quote.logoURL, let url = URL(string: urlStr) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .padding(6)
+                    case .failure, .empty:
+                        initialsView
+                    @unknown default:
+                        initialsView
+                    }
+                }
+            } else {
+                initialsView
+            }
+        }
+        .frame(width: 38, height: 38)
+        .background(Color(UIColor.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.surfaceSecondary, lineWidth: 1))
+    }
+
+    private var initialsView: some View {
         Text(String(quote.ticker.prefix(2)))
             .font(.system(size: 13, weight: .bold, design: .monospaced))
             .foregroundStyle(.white)
-            .frame(width: 38, height: 38)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(tickerColor)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var centerInfo: some View {
@@ -34,15 +59,16 @@ struct StockRowView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+            Text(quote.sector)
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
         }
     }
 
     private var sparklineAndPrice: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            HStack(alignment: .lastTextBaseline, spacing: 6) {
-                SparklineChartView(data: quote.sparklineData, isPositive: quote.isPositive)
-                priceStack
-            }
+        HStack(alignment: .center, spacing: 8) {
+            SparklineChartView(data: quote.sparklineData, isPositive: quote.isPositive)
+            priceStack
         }
     }
 
@@ -65,7 +91,6 @@ struct StockRowView: View {
     // MARK: - Helpers
 
     private var tickerColor: Color {
-        // Deterministic color per ticker from a curated palette
         let colors: [Color] = [
             Color(red: 0.18, green: 0.45, blue: 0.78),
             Color(red: 0.55, green: 0.25, blue: 0.75),
@@ -78,38 +103,5 @@ struct StockRowView: View {
         ]
         let index = abs(quote.ticker.hashValue) % colors.count
         return colors[index]
-    }
-}
-
-#Preview {
-    List {
-        StockRowView(quote: StockQuote(
-            id: "MAREL",
-            ticker: "MAREL",
-            companyName: "Marel hf.",
-            currentPrice: 382.50,
-            previousClose: 375.00,
-            openPrice: 376.00,
-            high52Week: 520.00,
-            low52Week: 310.00,
-            volume: 1_243_800,
-            marketCap: 287_000_000_000,
-            currency: "ISK",
-            sparklineData: [375, 377, 376, 379, 381, 380, 382, 381, 383, 382.5]
-        ))
-        StockRowView(quote: StockQuote(
-            id: "PLAY",
-            ticker: "PLAY",
-            companyName: "Play hf.",
-            currentPrice: 78.50,
-            previousClose: 83.00,
-            openPrice: 82.50,
-            high52Week: 125.00,
-            low52Week: 62.00,
-            volume: 4_812_600,
-            marketCap: 18_500_000_000,
-            currency: "ISK",
-            sparklineData: [83, 82, 81, 80, 79.5, 79, 78.8, 78.5, 78.6, 78.5]
-        ))
     }
 }
