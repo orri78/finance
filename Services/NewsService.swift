@@ -221,6 +221,4 @@ private extension String {
     func truncated(to length: Int) -> String {
         count <= length ? self : String(prefix(length)) + "…"
     }
-
-    }
-
+}
