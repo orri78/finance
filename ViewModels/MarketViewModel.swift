@@ -33,8 +33,8 @@ final class MarketViewModel {
 
     private let service: any MarketServiceProtocol
 
-    init(service: any MarketServiceProtocol = MockMarketService()) {
-        self.service = service
+    init(service: (any MarketServiceProtocol)? = nil) {
+        self.service = service ?? MockMarketService()
     }
 
     func load() async {
