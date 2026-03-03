@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 // MARK: - RSS Feed Sources
 
