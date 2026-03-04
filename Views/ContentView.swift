@@ -1,49 +1,32 @@
 import SwiftUI
 
 struct ContentView: View {
+    // Shared across Search + Watchlist tabs so saved companies stay in sync
+    @State private var companySearchViewModel = CompanySearchViewModel()
+
     var body: some View {
         TabView {
             NewsTabView()
                 .tabItem { Label("Fréttir", systemImage: "newspaper.fill") }
+
             MarketOverviewView()
                 .tabItem { Label("Markaðir", systemImage: "chart.bar.fill") }
-            SearchTabPlaceholderView()
+
+            CompanySearchView()
+                .environment(companySearchViewModel)
                 .tabItem { Label("Leita", systemImage: "magnifyingglass") }
-            WatchlistTabPlaceholderView()
+
+            WatchlistView()
+                .environment(companySearchViewModel)
                 .tabItem { Label("Vaktlisti", systemImage: "star.fill") }
+
             ProfileTabPlaceholderView()
                 .tabItem { Label("Mín síða", systemImage: "person.fill") }
         }
     }
 }
 
-// MARK: - Placeholder tabs (to be implemented in future phases)
-
-private struct SearchTabPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            ContentUnavailableView(
-                "Leita",
-                systemImage: "building.2",
-                description: Text("Leit að fyrirtækjum í Skattagátt kemur fljótlega.")
-            )
-            .navigationTitle("Fyrirtæki")
-        }
-    }
-}
-
-private struct WatchlistTabPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            ContentUnavailableView(
-                "Vaktlisti",
-                systemImage: "star",
-                description: Text("Vistaðu hlutabréf hér. Skráðu þig inn til að samstilla.")
-            )
-            .navigationTitle("Vaktlisti")
-        }
-    }
-}
+// MARK: - Profile placeholder
 
 private struct ProfileTabPlaceholderView: View {
     var body: some View {
