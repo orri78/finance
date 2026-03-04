@@ -38,6 +38,11 @@ final class CompanySearchViewModel {
     }
 
     private func performSearch(query: String) async {
+        let key = UserDefaults.standard.string(forKey: "skatturinnAPIKey") ?? ""
+        guard !key.isEmpty else {
+            errorMessage = "Settu inn Skatturinn API lykil í 'Mín síða' flipanum."
+            return
+        }
         isSearching = true
         errorMessage = nil
         do {

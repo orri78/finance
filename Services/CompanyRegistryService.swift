@@ -30,11 +30,14 @@ enum CompanyRegistryError: LocalizedError {
 final class CompanyRegistryService: CompanyRegistryProtocol {
 
     private let baseURL = "https://api.skatturinn.is/company-registry-legalentities-v2"
-    private let apiKey: String
     private let session: URLSession
 
-    init(apiKey: String = AppConfig.skatturinnAPIKey, session: URLSession = .shared) {
-        self.apiKey = apiKey
+    /// Always reads the latest key from UserDefaults so changes in Settings take effect immediately.
+    private var apiKey: String {
+        UserDefaults.standard.string(forKey: "skatturinnAPIKey") ?? ""
+    }
+
+    init(session: URLSession = .shared) {
         self.session = session
     }
 
@@ -79,6 +82,8 @@ final class CompanyRegistryService: CompanyRegistryProtocol {
         var req = URLRequest(url: url)
         req.setValue(apiKey, forHTTPHeaderField: "Ocp-Apim-Subscription-Key")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
+        print("🌐 Request: \(url.absoluteString)")
+        print("🔑 Key present: \(!apiKey.isEmpty)")
         do {
             let (data, response) = try await session.data(for: req)
             guard let http = response as? HTTPURLResponse else {

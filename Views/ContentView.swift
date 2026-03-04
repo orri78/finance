@@ -20,23 +20,8 @@ struct ContentView: View {
                 .environment(companySearchViewModel)
                 .tabItem { Label("Vaktlisti", systemImage: "star.fill") }
 
-            ProfileTabPlaceholderView()
+            ProfileTabView()
                 .tabItem { Label("Mín síða", systemImage: "person.fill") }
-        }
-    }
-}
-
-// MARK: - Profile placeholder
-
-private struct ProfileTabPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            ContentUnavailableView(
-                "Mín síða",
-                systemImage: "person.circle",
-                description: Text("Apple innskráning með Supabase kemur fljótlega.")
-            )
-            .navigationTitle("Mín síða")
         }
     }
 }
