@@ -43,7 +43,7 @@ final class CompanySearchViewModel {
         do {
             results = try await service.search(query: query)
             if results.isEmpty {
-                errorMessage = "Engar niðurstöður fundust fyrir „\(query)""
+                errorMessage = "Engar niðurstöður fundust fyrir '\(query)'"
             }
         } catch {
             results = []
